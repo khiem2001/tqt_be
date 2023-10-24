@@ -1,4 +1,3 @@
-import { convertToObjectId } from '@app/utils';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Expose, Transform } from 'class-transformer';
 import {
@@ -8,6 +7,7 @@ import {
   ObjectIdColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { convertToObjectId } from './convert-to-objectId';
 @ObjectType()
 export class BooleanPayload {
   @Field({ nullable: true })
