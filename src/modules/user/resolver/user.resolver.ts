@@ -1,9 +1,3 @@
-import { AppMetadata, BooleanPayload, PipeThrowError } from '@app/core';
-import {
-  USERS_SERVICE_NAME,
-  UpdateProfileRequest,
-  UsersServiceClient,
-} from '@app/proto-schema/proto/user.pb';
 import { Inject, UseGuards } from '@nestjs/common';
 import {
   Args,
@@ -14,7 +8,6 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { ClientGrpc, RpcException } from '@nestjs/microservices';
 import {
   ChangePassWhenLoginType,
   GetIdAdminResponse,
@@ -22,9 +15,6 @@ import {
   UpdateProfileResponse,
   UserDtoType,
 } from '../type';
-import { Media } from '../product/type';
-import { IGraphQLContext } from '@app/core/interfaces';
-import { AdminGuard, AuthenticationGuard } from '../auth/guards';
 import { catchError, firstValueFrom, timeout } from 'rxjs';
 import {
   ChangePassWhenLoginInput,
@@ -32,19 +22,19 @@ import {
   UpdateAvatarInput,
   UpdateProfileInputDto,
 } from '../input';
+import { Media } from 'modules/product/type';
+import { IGraphQLContext } from 'util/dataloader.interface';
+import { AdminGuard, AuthenticationGuard } from 'modules/auth/guard';
+import { UserService } from '../service';
+import { BooleanPayload } from 'util/reponse';
 
 @Resolver()
 export class UserResolver {
-  private userService: UsersServiceClient;
   constructor(
-    @Inject(USERS_SERVICE_NAME) private readonly userClient: ClientGrpc,
-    private readonly metadata: AppMetadata,
+    private userService: UserService;
+
   ) {}
-  onModuleInit() {
-    this.userService =
-      this.userClient.getService<UsersServiceClient>(USERS_SERVICE_NAME);
-  }
-  k;
+ 
 
   @Query(() => GetIdAdminResponse)
   async getIdAdmin() {
@@ -53,7 +43,7 @@ export class UserResolver {
   @Query(() => ListUserResponse)
   // @UseGuards(AdminGuard)
   async listUser() {
-    return await firstValueFrom(this.userService.listUser({}));
+    return await this.userService.listUser({})
   }
 
   @UseGuards(AuthenticationGuard)
@@ -68,8 +58,7 @@ export class UserResolver {
       .updateProfile({
         userId: _id,
         ...input,
-      } as unknown as UpdateProfileRequest)
-      .pipe(timeout(5000), catchError(PipeThrowError));
+      })
   }
 
   @UseGuards(AuthenticationGuard)
@@ -82,7 +71,7 @@ export class UserResolver {
 
     return this.userService.updateAvatarUser(
       input,
-      this.metadata.setUserId(_id),
+      _id,
     );
   }
 
@@ -96,7 +85,7 @@ export class UserResolver {
 
     return this.userService.changePasswordWhenLogin(
       input,
-      this.metadata.setUserId(_id),
+     _id,
     );
   }
   @UseGuards(AdminGuard)
