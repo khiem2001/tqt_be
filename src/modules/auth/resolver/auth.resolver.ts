@@ -8,7 +8,6 @@ import {
   Parent,
   Context,
 } from '@nestjs/graphql';
-import { AuthService } from './auth.service';
 import {
   AdminInputDto,
   ChangePasswordInputDto,
@@ -27,12 +26,13 @@ import {
   UserPayload,
   VerifyPhoneResponse,
 } from '../type';
-import { SmsService } from '../sms/sms.service';
-import { Media } from '../product/type';
-import { IGraphQLContext } from '@app/core/interfaces';
-import { UserDtoType } from '../user/type';
 import { AdminGuard, AuthenticationGuard } from '../guard';
 import { BooleanPayload } from 'util/reponse';
+import { AuthService } from '../service';
+import { SmsService } from 'modules/sms/service';
+import { UserDtoType } from 'modules/user/type';
+import { Media } from 'modules/product/type';
+import { IGraphQLContext } from 'util/dataloader.interface';
 
 @Resolver()
 export class AuthResolver {

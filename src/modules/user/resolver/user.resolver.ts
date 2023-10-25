@@ -30,20 +30,16 @@ import { BooleanPayload } from 'util/reponse';
 
 @Resolver()
 export class UserResolver {
-  constructor(
-    private userService: UserService;
-
-  ) {}
- 
+  constructor(private userService: UserService) {}
 
   @Query(() => GetIdAdminResponse)
   async getIdAdmin() {
-    return await this.userService.getIdAdmin({});
+    return await this.userService.getIdAdmin();
   }
   @Query(() => ListUserResponse)
   // @UseGuards(AdminGuard)
   async listUser() {
-    return await this.userService.listUser({})
+    return await this.userService.listUser();
   }
 
   @UseGuards(AuthenticationGuard)
@@ -54,11 +50,10 @@ export class UserResolver {
   ) {
     const { _id } = context.req.user;
 
-    return this.userService
-      .updateProfile({
-        userId: _id,
-        ...input,
-      })
+    return this.userService.updateProfile({
+      userId: _id,
+      ...input,
+    });
   }
 
   @UseGuards(AuthenticationGuard)
@@ -69,10 +64,7 @@ export class UserResolver {
   ) {
     const { _id } = context.req.user;
 
-    return this.userService.updateAvatarUser(
-      input,
-      _id,
-    );
+    return this.userService.updateAvatarUser(input, _id);
   }
 
   @UseGuards(AuthenticationGuard)
@@ -83,10 +75,7 @@ export class UserResolver {
   ) {
     const { _id } = context.req.user;
 
-    return this.userService.changePasswordWhenLogin(
-      input,
-     _id,
-    );
+    return this.userService.changePasswordWhenLogin(input, _id);
   }
   @UseGuards(AdminGuard)
   @Mutation(() => BooleanPayload)

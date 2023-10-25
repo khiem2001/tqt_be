@@ -4,3 +4,6 @@ export * from './convert-to-objectId';
 export * from './base.input';
 export * from './transform-text';
 export * from './dataloader.interface';
+export * from './base.repository';
+export * from './time';
+export * from './password';
