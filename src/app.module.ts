@@ -8,6 +8,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { DataloaderModule } from 'modules/dataloader/dataloader.module';
 import { DataloaderService } from 'modules/dataloader/dataloader.service';
 import { UserModule } from 'modules/user/user.module';
+import { MailModule } from 'modules/mailer/mailer.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { UserModule } from 'modules/user/user.module';
     }),
     AuthModule,
     UserModule,
+    MailModule,
   ],
 })
 export class AppModule {}

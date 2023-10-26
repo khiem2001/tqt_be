@@ -1,55 +1,95 @@
-import { AppMetadata } from '@app/core';
-import {
-  MAILER_SERVICE_NAME,
-  MailerServiceClient,
-  SendEmailRequest,
-  SendEmailResponse,
-  VerifyEmailResponse,
-} from '@app/proto-schema/proto/mailer.pb';
-import {
-  USERS_SERVICE_NAME,
-  UsersServiceClient,
-} from '@app/proto-schema/proto/user.pb';
-
 import { Inject, Injectable } from '@nestjs/common';
-import { ClientGrpc, RpcException } from '@nestjs/microservices';
+import { UserService } from 'modules/user/service';
 import { firstValueFrom } from 'rxjs';
+import { SendEmailResponse } from '../type';
+import { generateOTP } from 'util/otp';
+import { OtpEntity } from 'common/entity';
+import { MAIL_QUEUE, VERIFY_EMAIL } from 'config';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'twilio/lib/twiml/VoiceResponse';
+import { ConfigService } from '@nestjs/config';
+import { OtpRepository } from '../otp.repository';
+import { UserRepository } from 'modules/user/repository';
+import * as moment from 'moment';
+import * as ms from 'ms';
+import { convertToObjectId } from 'util/convert-to-objectId';
+const mongoose = require('mongoose');
 
 @Injectable()
 export class MailerService {
-  private mailerService: MailerServiceClient;
-  private userService: UsersServiceClient;
-
   constructor(
-    @Inject(MAILER_SERVICE_NAME) private readonly mailerClient: ClientGrpc,
-    @Inject(USERS_SERVICE_NAME) private readonly userClient: ClientGrpc,
-    private readonly metadata: AppMetadata,
+    @InjectQueue(MAIL_QUEUE) private readonly _mailQueue: Queue,
+    private readonly _configService: ConfigService,
+    private readonly _otpRepository: OtpRepository,
+    private readonly _userRepository: UserRepository,
+
+    @Inject(UserService) private readonly userService: UserService,
   ) {}
 
-  onModuleInit() {
-    this.mailerService =
-      this.mailerClient.getService<MailerServiceClient>(MAILER_SERVICE_NAME);
-    this.userService =
-      this.userClient.getService<UsersServiceClient>(USERS_SERVICE_NAME);
-  }
-
   async sendEmail({ email }): Promise<SendEmailResponse> {
-    const { user } = await firstValueFrom(
-      this.userService.getUserByEmail({ email }),
-    );
+    const { user } = await this.userService.getUserByEmail({ email });
     if (user) {
-      throw new RpcException(
-        'Email đã được sử dụng. Vui lòng sử dụng email khác.',
-      );
+      throw new Error('Email đã được sử dụng. Vui lòng sử dụng email khác.');
     }
-    return await firstValueFrom(this.mailerService.sendEmail({ email }));
-  }
-  async verifyEmail({ otp, sessionId }, _id): Promise<VerifyEmailResponse> {
-    return await firstValueFrom(
-      this.mailerService.verifyEmail(
-        { otp, sessionId },
-        this.metadata.setUserId(_id),
-      ),
+    const pinCode = await generateOTP(6);
+    const { sessionId } = await this._otpRepository.save(
+      new OtpEntity({
+        otp: pinCode,
+        email: email,
+        otpExpiredTime: moment()
+          .add(ms('9m') / 1000, 's')
+          .toDate(),
+        sessionId: mongoose.Types.ObjectId().toString(),
+      }),
     );
+    const data = {
+      to: email,
+      from: this._configService.get('MAILDEV_INCOMING_USER'),
+      subject: 'Welcome to NK-SHOP! Verify your Email',
+      template: 'verify-email',
+      context: { code: pinCode },
+    };
+    this._mailQueue.add(VERIFY_EMAIL, {
+      ...data,
+    });
+    return {
+      sessionId,
+    };
+  }
+  async verifyEmail({ otp: inputOTP, sessionId }, _id) {
+    const session = await this._otpRepository.findOne({
+      where: {
+        sessionId: sessionId,
+      },
+    });
+    if (!session) {
+      throw new Error('Phiên làm việc đã kết thúc');
+    }
+    const { otpExpiredTime, otp, isActive } = session;
+    if (otp !== inputOTP) {
+      throw new Error('Mã xác thực không chính xác !');
+    }
+    if (new Date() > otpExpiredTime || isActive) {
+      throw new Error('Mã xác thực đã hết hạn !');
+    }
+
+    const { result }: any = await this._otpRepository.updateOne(
+      { sessionId },
+      { $set: { isActive: true } },
+    );
+
+    await this._userRepository.updateOne(
+      { _id: convertToObjectId(_id) },
+      {
+        $set: {
+          email: session.email,
+          verifyEmail: true,
+        },
+      },
+    );
+
+    return {
+      success: !!result.ok,
+    };
   }
 }

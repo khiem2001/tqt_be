@@ -8,3 +8,4 @@ export * from './base.repository';
 export * from './time';
 export * from './password';
 export * from './otp';
+export * from './paginated.response';

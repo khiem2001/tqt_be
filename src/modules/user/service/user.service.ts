@@ -291,4 +291,13 @@ export class UserService {
 
     return { admin };
   }
+  async getUserByEmail(input: any) {
+    const { email } = input;
+    const user = await this._repository.findOne({
+      where: {
+        email,
+      },
+    });
+    return { user };
+  }
 }

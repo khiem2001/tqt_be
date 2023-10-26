@@ -1,13 +1,7 @@
-import {
-  BooleanPayload,
-  MediaStatus,
-  OrderStatus,
-  PaginationResponse,
-  PaymentMethod,
-  ShippingStatus,
-} from '@app/core';
-import { OrderTransaction } from '@app/core/entities/cart';
 import { Field, ObjectType } from '@nestjs/graphql';
+import { MediaStatus } from 'common/entity';
+import { OrderStatus, PaymentMethod, ShippingStatus } from 'enum/order.enum';
+import { PaginationResponse } from 'util/paginated.response';
 
 @ObjectType()
 export class ProductPayload {
