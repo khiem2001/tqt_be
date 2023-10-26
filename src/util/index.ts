@@ -7,3 +7,4 @@ export * from './dataloader.interface';
 export * from './base.repository';
 export * from './time';
 export * from './password';
+export * from './otp';

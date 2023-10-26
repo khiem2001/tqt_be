@@ -6,3 +6,5 @@ export * from './order.entity';
 export * from './product-favorite.entity';
 export * from './product.entity';
 export * from './type.entity';
+export * from './otp.entity';
+export * from './admin.entity'

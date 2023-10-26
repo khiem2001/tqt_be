@@ -13,6 +13,7 @@ import * as ms from 'ms';
 import { LoginResponse } from '../type';
 import { JWT_COMMON } from 'config';
 import { UserService } from 'modules/user/service';
+import { comparePassword } from 'util/password';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +27,7 @@ export class AuthService {
    * @returns
    */
   createAdmin(input: AdminInputDto) {
-    return this.userService.createAdmin(input as unknown as CreateAdminRequest);
+    return this.userService.createAdmin(input);
   }
 
   /**
@@ -35,9 +36,8 @@ export class AuthService {
    * @returns
    */
   async registerUser(input: RegisterUserInputDto) {
-    const { _id, fullName, phoneNumber } = await firstValueFrom(
-      this.userService.registerUser(input),
-    );
+    const { _id, fullName, phoneNumber } =
+      await this.userService.registerUser(input);
     return {
       _id,
       fullName,
@@ -51,9 +51,7 @@ export class AuthService {
    * @returns
    */
   async verifyPhone(input: GetPhoneInputDto) {
-    return await firstValueFrom(
-      this.userService.verifyPhone(input as VerifyPhoneRequest),
-    );
+    return await this.userService.verifyPhone(input);
   }
 
   /**
@@ -63,9 +61,10 @@ export class AuthService {
    */
   async loginUser(input: LoginUserInputDto) {
     const { phoneNumber, password } = input;
-    const { user } = await firstValueFrom(
-      this.userService.getUserByPhoneNumber({ phoneNumber }),
-    );
+    const { user } = await this.userService.getUserByPhoneNumber({
+      phoneNumber,
+    });
+
     if (this._userCanLogin(user)) {
       if (await comparePassword(password, user.password)) {
         const { token, refreshToken, expiresAt, refreshTokenExpiresAt } =
@@ -88,9 +87,7 @@ export class AuthService {
    * @param param0
    */
   async changePassword({ phoneNumber, password }) {
-    return await firstValueFrom(
-      this.userService.changePassword({ phoneNumber, password }),
-    );
+    return await this.userService.changePassword({ phoneNumber, password });
   }
 
   /**
@@ -98,7 +95,7 @@ export class AuthService {
    * @param user
    * @returns
    */
-  _userCanLogin(user: User) {
+  _userCanLogin(user: any) {
     if (!user.active) {
       throw new NotFoundException(
         'Tài khoản không hoạt động. Vui lòng liên hệ quản trị viên !',
@@ -111,7 +108,7 @@ export class AuthService {
    * @param user
    * @returns
    */
-  async tradeTokenProcess(user: User) {
+  async tradeTokenProcess(user: any) {
     const token = await this.generateToken(user, 'accessToken');
     const refreshToken = await this.generateToken(user, 'refreshToken');
     return {
@@ -131,7 +128,7 @@ export class AuthService {
    * @param type
    * @returns
    */
-  async generateToken({ email, fullName, _id }: User, type: string) {
+  async generateToken({ email, fullName, _id }: any, type: string) {
     const payload =
       type !== 'refreshToken' ? { email, fullName, uid: _id } : { uid: _id };
     return await this.jwtService.sign(payload, {
@@ -150,12 +147,10 @@ export class AuthService {
     accessToken,
     provider,
   }: LoginSocialInputDto): Promise<LoginResponse> {
-    const { user } = await firstValueFrom(
-      this.userService.loginOrCreateAccount({
-        accessToken,
-        provider,
-      } as LoginOrCreateAccountRequest),
-    );
+    const { user } = await this.userService.loginOrCreateAccount({
+      accessToken,
+      provider,
+    });
     const { token, refreshToken, expiresAt, refreshTokenExpiresAt } =
       await this.tradeTokenProcess(user);
 
@@ -177,11 +172,10 @@ export class AuthService {
     password,
     userName,
   }: AdminInputDto): Promise<LoginResponse> {
-    const { admin } = await firstValueFrom(
-      this.userService.getAdminByUserName({
-        userName,
-      }),
-    );
+    const { admin } = await this.userService.getAdminByUserName({
+      userName,
+    });
+
     // user can login
     if (await comparePassword(password, admin.password)) {
       const { token, refreshToken, expiresAt, refreshTokenExpiresAt } =
@@ -193,16 +187,16 @@ export class AuthService {
         expiresAt,
         refreshTokenExpiresAt,
         payload: admin,
-      };
+      } as unknown as LoginResponse;
     }
-    throw new RpcException('Mật khẩu không chính xác !');
+    throw new Error('Mật khẩu không chính xác !');
   }
   /**
    * Trade token
    * @param user
    * @returns
    */
-  async tradeTokenAdminProcess(admin: Admin) {
+  async tradeTokenAdminProcess(admin: any) {
     // generate token
     const token = await this.generateTokenAdmin(admin, 'adminAccessToken');
     // generate refresh token
@@ -235,7 +229,7 @@ export class AuthService {
    * @param type
    * @returns
    */
-  async generateTokenAdmin({ userName, fullName, _id }: Admin, type: string) {
+  async generateTokenAdmin({ userName, fullName, _id }: any, type: string) {
     const payload =
       type !== 'adminRefreshToken'
         ? { userName, fullName, uid: _id }

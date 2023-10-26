@@ -1,8 +1,26 @@
 import { Module } from '@nestjs/common';
-import { SmsResolver } from './sms.resolver';
-import { SmsService } from './sms.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { OtpEntity } from 'common/entity';
+import { SmsService } from './service';
+import { SmsResolver } from './resolver';
+import { BullModule } from '@nestjs/bull';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
+  imports: [
+    TypeOrmModule.forFeature([OtpEntity]),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        redis: {
+          host: configService.get('REDIS_HOST'),
+          port: Number(configService.get('REDIS_PORT')),
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    BullModule.registerQueue({ name: 'sms' }),
+  ],
   providers: [SmsService, SmsResolver],
 })
 export class SmsModule {}
