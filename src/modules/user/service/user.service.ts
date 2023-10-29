@@ -300,4 +300,17 @@ export class UserService {
     });
     return { user };
   }
+  async getListUserByIds(input: any) {
+    const { ids } = input;
+    const objectIds = ids.map((id) => {
+      return convertToObjectId(id);
+    });
+
+    const result = await this._repository.find({
+      where: {
+        _id: { $in: objectIds },
+      },
+    });
+    return { user: result };
+  }
 }

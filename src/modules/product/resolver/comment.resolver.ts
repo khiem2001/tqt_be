@@ -1,4 +1,3 @@
-import { AppMetadata, PUB_SUB } from '@app/core';
 import { Inject, UseGuards } from '@nestjs/common';
 import {
   Args,
@@ -10,19 +9,18 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
-import { RpcException } from '@nestjs/microservices';
-import { RedisPubSub } from 'graphql-redis-subscriptions';
-import { AdminGuard, AuthenticationGuard } from '../auth/guards';
-import { CommentService } from './comment.service';
 import {
   CreateCommentInput,
   ListCommentInput,
   ListFeedbackInput,
-} from './input';
-import { CommentResponse, ListCommentResponse } from './type';
-import { ProductService } from './product.service';
-import { UserDtoType } from '../user/type';
-import { IGraphQLContext } from '@app/core/interfaces';
+} from '../input';
+import { CommentResponse, ListCommentResponse } from '../type';
+import { CommentService, ProductService } from '../service';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { PUB_SUB } from 'config';
+import { AdminGuard, AuthenticationGuard } from 'modules/auth/guard';
+import { IGraphQLContext } from 'util/dataloader.interface';
+import { UserDtoType } from 'modules/user/type';
 
 @Resolver(CommentResponse)
 export class CommentResolver {
@@ -30,7 +28,6 @@ export class CommentResolver {
     @Inject(ProductService) private _productService: ProductService,
     @Inject(CommentService)
     private _commentService: CommentService,
-    private readonly metadata: AppMetadata,
     @Inject(PUB_SUB) private pubSub: RedisPubSub,
   ) {}
 
@@ -54,7 +51,7 @@ export class CommentResolver {
   ) {
     const { _id: userId } = context.req.user;
     const product = await this._productService.getProduct({ productId });
-    if (!product) throw new RpcException('Không tìm thấy sự kiện !');
+    if (!product) throw new Error('Không tìm thấy sự kiện !');
 
     return await this._commentService.createComment(
       { productId: product.product._id, message, parentId },
@@ -70,7 +67,7 @@ export class CommentResolver {
     const { uid } = context.req.user;
 
     const product = await this._productService.getProduct({ productId });
-    if (!product) throw new RpcException('Không tìm thấy sự kiện !');
+    if (!product) throw new Error('Không tìm thấy sự kiện !');
 
     return await this._commentService.createComment(
       { productId: product.product._id, message, parentId },

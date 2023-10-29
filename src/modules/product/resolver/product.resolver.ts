@@ -1,5 +1,4 @@
 import { Inject, UseGuards } from '@nestjs/common';
-import { ProductService } from './product.service';
 import {
   Args,
   Mutation,
@@ -21,7 +20,7 @@ import {
   OrderItemResponse,
   PrintOrderType,
   ProductPayload,
-} from './type';
+} from '../type';
 import {
   AddToCartInput,
   ConfirmOrderInput,
@@ -33,11 +32,12 @@ import {
   ReadProductInputDto,
   RemoveFromCartInput,
   UpdateProductInputDto,
-} from './input';
-import { BooleanPayload } from '@app/core';
-import { AdminGuard, AuthenticationGuard } from '../auth/guards';
-import { IGraphQLContext } from '@app/core/interfaces';
-import { UserDtoType } from '../user/type';
+} from '../input';
+import { ProductService } from '../service';
+import { BooleanPayload } from 'util/reponse';
+import { AdminGuard, AuthenticationGuard } from 'modules/auth/guard';
+import { IGraphQLContext } from 'util/dataloader.interface';
+import { UserDtoType } from 'modules/user/type';
 
 export class ProductResolver {
   constructor(
@@ -155,7 +155,7 @@ export class ProductResolver {
     @Context() context: any,
   ) {
     const { _id: userId } = context.req.user;
-    return await this._productService.isFavoriteEvent(input, userId);
+    return await this._productService.isFavoriteProduct(input, userId);
   }
 
   @Mutation(() => PrintOrderType)

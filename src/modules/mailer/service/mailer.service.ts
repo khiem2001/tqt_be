@@ -13,7 +13,7 @@ import { UserRepository } from 'modules/user/repository';
 import * as moment from 'moment';
 import * as ms from 'ms';
 import { convertToObjectId } from 'util/convert-to-objectId';
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 @Injectable()
 export class MailerService {
@@ -39,7 +39,7 @@ export class MailerService {
         otpExpiredTime: moment()
           .add(ms('9m') / 1000, 's')
           .toDate(),
-        sessionId: mongoose.Types.ObjectId().toString(),
+        sessionId: new mongoose.Types.ObjectId().toString(),
       }),
     );
     const data = {

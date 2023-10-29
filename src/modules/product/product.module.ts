@@ -8,6 +8,7 @@ import {
   TypeResolver,
 } from './resolver';
 import { CommentService, ProductService } from './service';
+import { FindNoSQL } from 'util/find.operator';
 
 @Module({
   imports: [],
@@ -20,6 +21,8 @@ import { CommentService, ProductService } from './service';
     TypeResolver,
     ListProductByIdsResolver,
     OrderDtoResolver,
+    FindNoSQL,
+
     // CartTypeResolver,
   ],
 })

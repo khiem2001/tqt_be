@@ -9,6 +9,9 @@ import { DataloaderModule } from 'modules/dataloader/dataloader.module';
 import { DataloaderService } from 'modules/dataloader/dataloader.service';
 import { UserModule } from 'modules/user/user.module';
 import { MailModule } from 'modules/mailer/mailer.module';
+import { MediaModule } from 'modules/media/media.module';
+import { ProductModule } from 'modules/product/product.module';
+import { SmsModule } from 'modules/sms/sms.module';
 
 @Module({
   imports: [
@@ -43,6 +46,9 @@ import { MailModule } from 'modules/mailer/mailer.module';
     AuthModule,
     UserModule,
     MailModule,
+    MediaModule,
+    ProductModule,
+    SmsModule,
   ],
 })
 export class AppModule {}

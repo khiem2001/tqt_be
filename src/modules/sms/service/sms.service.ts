@@ -11,7 +11,8 @@ import { OtpEntity } from 'common/entity';
 import * as moment from 'moment';
 import * as ms from 'ms';
 import { generateOTP } from 'util/otp';
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { OtpRepository } from '../repository';
@@ -34,7 +35,7 @@ export class SmsService {
           otpExpiredTime: moment()
             .add(ms('2m') / 1000, 's')
             .toDate(),
-          sessionId: mongoose.Types.ObjectId().toString(),
+          sessionId: new mongoose.Types.ObjectId().toString(),
         }),
       );
 

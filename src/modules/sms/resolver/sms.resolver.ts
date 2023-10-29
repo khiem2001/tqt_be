@@ -1,8 +1,8 @@
 import { Inject } from '@nestjs/common';
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { SmsService } from './sms.service';
-import { ConfirmOtpResponse, SendOtpResponse } from './type';
-import { ConfirmOtpRequestInput, SendOtpRequestInput } from './input';
+import { ConfirmOtpResponse, SendOtpResponse } from '../type';
+import { ConfirmOtpRequestInput, SendOtpRequestInput } from '../input';
+import { SmsService } from '../service';
 
 @Resolver()
 export class SmsResolver {

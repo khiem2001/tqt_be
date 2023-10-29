@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
+import { setupSwagger } from 'util/swagger';
 
 async function bootstrap() {
   const configService = new ConfigService();
@@ -26,6 +27,8 @@ async function bootstrap() {
       },
     }),
   );
+  setupSwagger(app);
+
   app.enableCors();
   await app.startAllMicroservices();
   const server = await app.listen(port, () => {

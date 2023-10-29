@@ -2,7 +2,7 @@ import { applyDecorators, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
-import { fileMimetypeFilter } from 'util/file-mimetype-filter';
+import { fileMimetypeFilter } from './file-mimetype-filter';
 
 export function ApiFile(
   fieldName = 'file',

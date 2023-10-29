@@ -1,30 +1,20 @@
-import { PipeThrowError } from '@app/core';
-import {
-  GetManyMediaRequest,
-  MediaServiceClient,
-  MEDIA_SERVICE_NAME,
-} from '@app/proto-schema/proto/media.pb';
-import { sortDataByIds } from '@app/utils/loaders/sortDataByIds';
 import { Inject, Injectable } from '@nestjs/common';
-import { ClientGrpc } from '@nestjs/microservices';
 import * as DataLoader from 'dataloader';
 import { catchError, firstValueFrom, timeout } from 'rxjs';
 import { Media } from '../../product/type';
+import { PipeThrowError } from 'util/error';
+import { MediaService } from 'modules/media/media.service';
+import { sortDataByIds } from 'util/sortDataByIds';
 
 @Injectable()
 export class MediaLoader {
-  private mediaService: MediaServiceClient;
-
-  constructor(@Inject(MEDIA_SERVICE_NAME) private readonly client: ClientGrpc) {
-    this.mediaService =
-      this.client.getService<MediaServiceClient>(MEDIA_SERVICE_NAME);
-  }
+  constructor(
+    @Inject(MediaService) private readonly mediaService: MediaService,
+  ) {}
 
   generateDataLoader() {
     return new DataLoader<string, Media>(async (keys: string[]) => {
-      const { media } = await firstValueFrom(
-        this.mediaService.getManyMedia({ ids: keys }),
-      );
+      const { media }: any = this.mediaService.getManyMedia(keys);
       if (!media) {
         return keys.map(() => null);
       }
@@ -35,22 +25,13 @@ export class MediaLoader {
 
 @Injectable()
 export class ManyMediaLoader {
-  private mediaService: MediaServiceClient;
-
-  constructor(@Inject(MEDIA_SERVICE_NAME) private readonly client: ClientGrpc) {
-    this.mediaService =
-      this.client.getService<MediaServiceClient>(MEDIA_SERVICE_NAME);
-  }
+  constructor(
+    @Inject(MediaService) private readonly mediaService: MediaService,
+  ) {}
 
   generateDataLoader() {
     return new DataLoader<string, Media[]>(async (keys: string[]) => {
-      const { media = [] } = await firstValueFrom(
-        this.mediaService
-          .getManyMedia({
-            ids: keys,
-          } as unknown as GetManyMediaRequest)
-          .pipe(timeout(5000), catchError(PipeThrowError)),
-      );
+      const { media = [] }: any = await this.mediaService.getManyMedia(keys);
 
       if (!media) {
         return keys.map(() => null);
