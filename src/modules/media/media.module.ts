@@ -11,7 +11,7 @@ import { MediaEntity } from 'common/entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MediaEntity]),
+    TypeOrmModule.forFeature([MediaEntity, MediaRepository]),
     ServeStaticModule.forRootAsync({
       useFactory: (configService: ConfigService) => [
         {
